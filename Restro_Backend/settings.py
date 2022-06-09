@@ -14,6 +14,9 @@ from pathlib import Path
 import environ
 import os
 
+from datetime import timedelta
+from rest_framework.settings import api_settings
+
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
@@ -45,16 +48,28 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Restro.apps.RestroConfig',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'knox',
+    'corsheaders',
+    'apps.core',
+    'apps.userModule',
+    'apps.hotelMangement',
+    'apps.manageMenu'
 ]
+
+AUTH_USER_MODEL = 'userModule.user'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'Restro_Backend.urls'
@@ -78,6 +93,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Restro_Backend.wsgi.application'
 
+# Rest framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'knox.auth.TokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication',),
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework.authentication.BasicAuthentication',
+    #     'rest_framework.authentication.TokenAuthentication',
+    # )
+}
+REST_KNOX = {
+    'USER_SERIALIZER': 'knox.serializers.UserSerializer',
+    'TOKEN_LIMIT_PER_USER': None,
+    'AUTO_REFRESH': False,
+    'SECURE_HASH_ALGORITHM': 'cryptography.hazmat.primitives.hashes.SHA512',
+    'AUTH_TOKEN_CHARACTER_LENGTH': 64,
+    'TOKEN_TTL': timedelta(hours=50),
+    'AUTH_HEADER_PREFIX': 'Bearer',
+}
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
@@ -140,9 +174,68 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = 'static/'
+# BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+# TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 25
+    EMAIL_HOST_USER = ''
+    EMAIL_HOST_PASSWORD = ''
+    EMAIL_USE_TLS = False
+    DEFAULT_FROM_EMAIL = 'testing@example.com'
+
+# Restro #Logging Information
+LOGGING = {
+    'version': 1,
+    # Version of logging
+    'disable_existing_loggers': False,
+    # disable logging
+    # Handlers #############################################################
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s |:| LEVEL: %(levelname)s |:| FILE PATH: %(pathname)s |:| FUNCTION/METHOD: %('
+                      'funcName)s %(message)s |:| LINE NO.: %(lineno)d |:| PROCESS ID: %(process)d |:| THREAD ID: %('
+                      'thread)d',
+            'datefmt': "%y/%b/%Y %H:%M:%S",
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 1,
+            'backupCount': 0,
+            'filename': './logs/restro-debug.log',
+            'formatter': 'verbose'
+        },
+        ########################################################################
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    # Loggers ####################################################################
+    'loggers': {
+        'django': {
+            'handlers': ['file', ],
+            'level': 'DEBUG',
+            'propagate': True,
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG')
+        },
+    },
+}
