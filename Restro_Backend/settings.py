@@ -232,10 +232,10 @@ LOGGING = {
     # Loggers ####################################################################
     'loggers': {
         'django': {
-            'handlers': ['file', ],
-            'level': 'DEBUG',
+            'handlers': ['file','console' ],
+            'level': 'INFO',
             'propagate': True,
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG')
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO')
         },
     },
 }

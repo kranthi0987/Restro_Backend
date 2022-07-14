@@ -5,6 +5,7 @@ from apps.hotelMangement.models import Hotel
 
 
 class CreateHotelSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Hotel
         fields = '__all__'

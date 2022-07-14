@@ -2,7 +2,6 @@ from django.template.defaulttags import url
 from django.urls import re_path, path
 
 from apps.hotelMangement import views
-from apps.hotelMangement.views import *
 
 urlpatterns = [
     path('hotel/list/', views.hotel_list),

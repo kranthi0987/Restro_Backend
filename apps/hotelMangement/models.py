@@ -8,6 +8,14 @@ from django.utils import timezone
 # Create your models here.
 from django_lifecycle import LifecycleModelMixin, AFTER_CREATE, hook, AFTER_SAVE, AFTER_DELETE
 
+import json, urllib
+
+
+def getLatLon(address):
+    address = urllib.parse.quote_plus(address)
+    geo = urllib.request.urlopen("http://maps.googleapis.com/maps/api/geocode/json?sensor=false&address=%s" % (address))
+    return geo.read()
+
 
 class Hotel(LifecycleModelMixin, models.Model):
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,10}$',
@@ -31,8 +39,15 @@ class Hotel(LifecycleModelMixin, models.Model):
     hotel_logo = models.ImageField(null=True, upload_to='hotelLogo/', default='')
     hotel_image_thumbnail = models.ImageField(upload_to='hotelImage_thumbs/', editable=False)
     hotel_logo_thumbnail = models.ImageField(upload_to='hotelLogo_thumbs/', editable=False)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        geo = json.loads(
+            getLatLon("%s,%s,%s" % (self.address, self.city, self.zipcode)))
+        if geo['status'] == "OK":
+            self.latitude = geo['results'][0]['geometry']['location']['lat']
+            self.longitude = geo['results'][0]['geometry']['location']['lng']
 
         if not self.make_thumbnail():
             # set to a default thumbnail

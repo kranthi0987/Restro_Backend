@@ -43,21 +43,10 @@ def hotel_list_byid(request):
     """
     # Getting the list of Hotel
     if request.method == 'POST':
-        products = Hotel.objects.filter(id=request.data['doc_id'])
+        products = Hotel.objects.filter(id=request.data['id'])
         serializer = CreateHotelSerializer(products, context={'request': request}, many=True)
         return Response(serializer.data)
 
-
-@api_view(['POST'])
-@permission_classes((IsAuthenticated,))
-def patient_count_by_id(request):
-    """
-    List all products, or create a new product.
-    """
-    # Getting the list of patients or create Patient
-    if request.method == 'POST':
-        products = Hotel.objects.filter(doc_id_id=request.data['doc_id']).count()
-        return Response(products)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
